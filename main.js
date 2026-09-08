@@ -343,14 +343,43 @@ function wireStatic() {
   $("heroInput").addEventListener("change", e => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      img.src = reader.result;
+    compressImage(file, 1280, 0.75).then(dataUrl => {
+      img.src = dataUrl;
       photo.classList.add("filled");
-      try { localStorage.setItem(LS_KEY + ":photo", reader.result); } catch (err) {}
-    };
-    reader.readAsDataURL(file);
+      try {
+        localStorage.setItem(LS_KEY + ":photo", dataUrl);
+      } catch (err) {
+        alert("사진 용량이 너무 커서 저장하지 못했어요. 다른 사진으로 다시 시도해 주세요.");
+      }
+    }).catch(() => {
+      alert("사진을 불러오지 못했어요. 다른 사진으로 다시 시도해 주세요.");
+    });
   });
+
+  function compressImage(file, maxDim, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const im = new Image();
+        im.onload = () => {
+          let w = im.width, h = im.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+            else { w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext("2d").drawImage(im, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        im.onerror = reject;
+        im.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
 }
 
 (async function start() {
