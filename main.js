@@ -329,6 +329,13 @@ function wireStatic() {
 
   $("memo").addEventListener("input", e => { data.memo = e.target.value; scheduleSave(); });
 
+  $("saveBtn").addEventListener("click", () => {
+    localStorage.setItem(LS_KEY, JSON.stringify(data));
+    clearTimeout(saveTimer);
+    if (!API_URL) { status("저장됨 ✓ (이 브라우저)"); return; }
+    pushSave();
+  });
+
   $("resetBtn").addEventListener("click", () => {
     if (!confirm("처음 상태로 되돌릴까요? 지금 체크한 내용은 사라집니다.")) return;
     data = JSON.parse(JSON.stringify(DEFAULT_DATA));
