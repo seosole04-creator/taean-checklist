@@ -160,6 +160,11 @@ const nextWho = cur => {
   return ids[(ids.indexOf(cur) + 1) % ids.length];
 };
 const initial = name => ((name || "?").trim()[0] || "?");
+const itemWho = it => {
+  const ids = Array.isArray(it.who) ? it.who : (it.who ? [it.who] : []);
+  return ids.filter(id => memberIndex(id) >= 0);
+};
+let openWhoItems = new Set();
 
 function commit() { scheduleSave(); render(); }
 
@@ -168,7 +173,7 @@ function renderMembers() {
   const row = $("memberRow");
   row.innerHTML = "";
   data.members.forEach((m, i) => {
-    const mine = data.items.filter(t => t.who === m.id);
+    const mine = data.items.filter(t => itemWho(t).includes(m.id));
     const el = document.createElement("div");
     el.className = "member";
     el.innerHTML =
@@ -218,25 +223,43 @@ function renderCards() {
     const ul = card.querySelector(".items");
     items.forEach(it => {
       const li = document.createElement("li");
-      const who = memberName(it.who);
+      const whoIds = itemWho(it);
+      const whoLabel = whoIds.length ? whoIds.map(memberName).join("·") : "공용";
+      const isOpen = openWhoItems.has(it.id);
       li.innerHTML =
-        '<button class="check' + (it.done ? " on" : "") + '">' + (it.done ? "✓" : "") + "</button>" +
-        '<span class="item-text">' + it.t + "</span>" +
-        '<button class="who">' + who + "</button>" +
-        '<button class="x-btn">×</button>';
-      if (it.who !== 0) {
-        const c = dotColor(it.who);
-        const chip = li.querySelector(".who");
-        chip.style.background = c;
-        chip.style.borderColor = c;
-        chip.style.color = "#fff";
-      }
+        '<div class="item-main">' +
+          '<button class="check' + (it.done ? " on" : "") + '">' + (it.done ? "✓" : "") + "</button>" +
+          '<span class="item-text">' + it.t + "</span>" +
+          '<button class="who">' + whoLabel + "</button>" +
+          '<button class="x-btn">×</button>' +
+        "</div>" +
+        (isOpen ? '<div class="who-menu split-row"></div>' : "");
       li.querySelector(".check").addEventListener("click", () => { it.done = !it.done; commit(); });
-      li.querySelector(".who").addEventListener("click", () => { it.who = nextWho(it.who); commit(); });
+      li.querySelector(".who").addEventListener("click", () => {
+        if (openWhoItems.has(it.id)) openWhoItems.delete(it.id);
+        else openWhoItems.add(it.id);
+        render();
+      });
       li.querySelector(".x-btn").addEventListener("click", () => {
         data.items = data.items.filter(x => x.id !== it.id);
         commit();
       });
+      if (isOpen) {
+        const menu = li.querySelector(".who-menu");
+        data.members.forEach((m, i) => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "split-chip" + (whoIds.includes(m.id) ? " on" : "");
+          chip.style.setProperty("--chip-color", DOTS[i % DOTS.length]);
+          chip.textContent = m.name || "이름없음";
+          chip.addEventListener("click", () => {
+            const cur = itemWho(it);
+            it.who = cur.includes(m.id) ? cur.filter(id => id !== m.id) : cur.concat([m.id]);
+            commit();
+          });
+          menu.appendChild(chip);
+        });
+      }
       ul.appendChild(li);
     });
 
