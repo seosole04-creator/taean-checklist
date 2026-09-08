@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>태안 안면도 체크리스트</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="main.css" />
+</head>
+<body>
+  <div class="page">
+
+    <!-- ▼ 상단: 제목·날짜·장소 (여기 글자만 고치면 됩니다) -->
+    <header class="hero">
+      <div class="hero-text">
+        <span class="hand">설레는 여행,<br />준비는 체크리스트로! ♡</span>
+        <h1><span class="pink">태안 안면도</span> 체크리스트</h1>
+        <p class="lead">꼼꼼하게 준비하고, 더 즐거운 1박 2일 보내요!</p>
+        <div class="hero-meta">
+          <div class="pills">
+            <span class="pill">9월 12일 토 — 13일 일 · 1박 2일</span>
+            <span class="pill pill-pink">D-5 · 출발 전 체크해요 ♥</span>
+          </div>
+          <a class="place" href="https://naver.me/xxYus49a" target="_blank" rel="noreferrer">
+            <span class="place-icon">📍</span>
+            <span class="place-text">
+              <strong>힐마레 펜션</strong>
+              <em>충남 태안군 안면읍 · 네이버 지도에서 열기 ↗</em>
+            </span>
+          </a>
+        </div>
+      </div>
+      <div class="hero-photo">
+        <img id="heroImg" alt="여행 사진" />
+        <label class="hero-photo-empty" id="heroDrop">
+          사진 넣기 (클릭)
+          <input type="file" id="heroInput" accept="image/*" hidden />
+        </label>
+      </div>
+    </header>
+
+    <!-- ▼ 같이 가는 사람 -->
+    <section class="block">
+      <div class="block-head">
+        <h2>같이 가는 사람</h2>
+        <button class="ghost-btn" id="addMember">+ 이름 추가</button>
+      </div>
+      <div class="member-row" id="memberRow"></div>
+    </section>
+
+    <!-- ▼ 체크리스트 카드들 (내용은 main.js 위쪽에서 수정) -->
+    <section class="cards" id="cards"></section>
+
+    <!-- ▼ 예산 공유 -->
+    <section class="block">
+      <div class="panel panel-green">
+        <div class="panel-head">
+          <span class="panel-icon">₩</span>
+          <h3>예산 공유</h3>
+          <span class="panel-badge">같이 나눠요!</span>
+        </div>
+        <div class="budget-grid">
+          <div class="budget-totals">
+            <div class="stat"><span>총 지출</span><strong id="total">₩0</strong></div>
+            <div class="stat"><span>1인당</span><strong id="perPerson">₩0</strong></div>
+          </div>
+          <div class="balance-list" id="balances"></div>
+          <ul class="expense-list" id="expenses"></ul>
+        </div>
+        <div class="add-row">
+          <input id="expName" placeholder="지출 항목" />
+          <input id="expAmt" class="mono" placeholder="금액" inputmode="numeric" />
+          <button class="green-btn" id="addExp">추가</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ▼ 메모 -->
+    <section class="block">
+      <div class="panel panel-pink memo">
+        <div class="panel-head">
+          <span class="panel-icon pink-icon">✎</span>
+          <h3>메모</h3>
+        </div>
+        <p class="hint">여행에 대한 기대, 준비할 것들을 자유롭게 적어보세요!</p>
+        <textarea id="memo" placeholder="예: 첫날 노을 18:40 꽃지해변 / 펜션 체크인 15시"></textarea>
+        <span class="hand hand-end">좋은 추억 만들고 오세요 ♥</span>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <button class="ghost-btn" id="resetBtn">처음 상태로 되돌리기</button>
+      <span>체크한 내용은 이 브라우저에 저장됩니다.</span>
+    </footer>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
