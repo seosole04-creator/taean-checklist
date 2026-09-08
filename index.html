@@ -6,7 +6,7 @@
 <title>태안 안면도 체크리스트</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="main.css?v=3" />
+<link rel="stylesheet" href="main.css?v=4" />
 </head>
 <body>
   <div class="page">
@@ -68,6 +68,10 @@
           <div class="balance-list" id="balances"></div>
           <ul class="expense-list" id="expenses"></ul>
         </div>
+        <div class="split-picker">
+          <span class="split-picker-label">누구랑 나눌까요</span>
+          <div class="split-row" id="splitRow"></div>
+        </div>
         <div class="add-row">
           <input id="expName" placeholder="지출 항목" />
           <input id="expAmt" class="mono" placeholder="금액" inputmode="numeric" />
@@ -96,6 +100,6 @@
     </footer>
   </div>
 
-  <script src="main.js?v=3"></script>
+  <script src="main.js?v=4"></script>
 </body>
 </html>

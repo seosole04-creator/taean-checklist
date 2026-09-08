@@ -10,11 +10,11 @@ const TRIP_KEY = "taean-0912";   // 이 여행의 이름표 (친구들과 같은
    2) 여행 정보 / 체크리스트 내용 — 여기만 고쳐도 됩니다.
    ========================================================= */
 const CATEGORIES = [
+  { id: "plan",      label: "여행 준비 사항",   icon: "📍", badge: "잊지말고!",       theme: "orange" },
+  { id: "extra",     label: "컨텐츠 준비물",    icon: "☆",  badge: "나만의 리스트!",  theme: "lilac" },
   { id: "essential", label: "필수 준비물",      icon: "🧳", badge: "가장 중요해요!",  theme: "pink" },
   { id: "wear",      label: "의류 & 세면도구",  icon: "👕", badge: "1박이니까!",     theme: "blue" },
-  { id: "health",    label: "건강 & 안전",      icon: "✚",  badge: "미리미리!",       theme: "green" },
-  { id: "plan",      label: "여행 준비 사항",   icon: "📍", badge: "잊지말고!",       theme: "orange" },
-  { id: "extra",     label: "컨텐츠 준비물",    icon: "☆",  badge: "나만의 리스트!",  theme: "lilac" }
+  { id: "health",    label: "건강 & 안전",      icon: "✚",  badge: "미리미리!",       theme: "green" }
 ];
 
 const DEFAULT_DATA = {
@@ -75,6 +75,7 @@ let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let saveTimer = null;
 let saving = false;
 let localTouchedAt = 0;
+let splitSelection = new Set(DEFAULT_DATA.members.map(m => m.id));
 
 /* ---------- 저장 / 불러오기 ---------- */
 function status(msg, isError) {
@@ -253,17 +254,58 @@ function renderCards() {
   });
 }
 
+function expenseGroup(e) {
+  const ids = (e.splitAmong && e.splitAmong.length) ? e.splitAmong.filter(id => memberIndex(id) >= 0) : [];
+  return ids.length ? ids : data.members.map(m => m.id);
+}
+
+function ensureSplitSelection() {
+  splitSelection = new Set([...splitSelection].filter(id => data.members.some(m => m.id === id)));
+  if (splitSelection.size === 0) data.members.forEach(m => splitSelection.add(m.id));
+}
+
+function renderSplitRow() {
+  ensureSplitSelection();
+  const row = $("splitRow");
+  if (!row) return;
+  row.innerHTML = "";
+  data.members.forEach((m, i) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "split-chip" + (splitSelection.has(m.id) ? " on" : "");
+    chip.style.setProperty("--chip-color", DOTS[i % DOTS.length]);
+    chip.textContent = m.name || "이름없음";
+    chip.addEventListener("click", () => {
+      if (splitSelection.has(m.id)) {
+        if (splitSelection.size > 1) splitSelection.delete(m.id);
+      } else {
+        splitSelection.add(m.id);
+      }
+      renderSplitRow();
+    });
+    row.appendChild(chip);
+  });
+}
+
 function renderBudget() {
   const spend = data.expenses.reduce((a, e) => a + e.amt, 0);
   const n = Math.max(data.members.length, 1);
   $("total").textContent = won(spend);
   $("perPerson").textContent = won(spend / n);
 
+  const owed = {};
+  data.members.forEach(m => { owed[m.id] = 0; });
+  data.expenses.forEach(e => {
+    const group = expenseGroup(e);
+    const share = group.length ? e.amt / group.length : 0;
+    group.forEach(id => { owed[id] = (owed[id] || 0) + share; });
+  });
+
   const bl = $("balances");
   bl.innerHTML = "";
   data.members.forEach((m, i) => {
     const paid = data.expenses.filter(e => e.payer === m.id).reduce((a, e) => a + e.amt, 0);
-    const diff = paid - spend / n;
+    const diff = paid - (owed[m.id] || 0);
     const cls = Math.abs(diff) < 1 ? "zero" : diff > 0 ? "plus" : "minus";
     const el = document.createElement("div");
     el.className = "balance";
@@ -275,12 +317,16 @@ function renderBudget() {
     bl.appendChild(el);
   });
 
+  renderSplitRow();
+
   const list = $("expenses");
   list.innerHTML = "";
   data.expenses.forEach(e => {
+    const group = expenseGroup(e);
+    const isPartial = group.length !== data.members.length;
     const li = document.createElement("li");
     li.innerHTML =
-      '<span class="label">' + e.t + "</span>" +
+      '<span class="label">' + e.t + (isPartial ? '<span class="split-tag">' + group.length + "명: " + group.map(memberName).join("·") + "</span>" : "") + "</span>" +
       '<button class="who">' + memberName(e.payer) + "</button>" +
       '<span class="amt">' + won(e.amt) + "</span>" +
       '<button class="x-btn">×</button>';
@@ -319,9 +365,12 @@ function wireStatic() {
     const name = $("expName").value.trim();
     const amt = parseInt($("expAmt").value.replace(/[^0-9]/g, ""), 10);
     if (!name || !amt) return;
-    data.expenses.push({ id: data.nextId++, t: name, payer: data.members[0] ? data.members[0].id : 0, amt: amt });
+    ensureSplitSelection();
+    const splitAmong = data.members.filter(m => splitSelection.has(m.id)).map(m => m.id);
+    data.expenses.push({ id: data.nextId++, t: name, payer: data.members[0] ? data.members[0].id : 0, amt: amt, splitAmong: splitAmong });
     $("expName").value = "";
     $("expAmt").value = "";
+    data.members.forEach(m => splitSelection.add(m.id));
     commit();
   };
   $("addExp").addEventListener("click", addExp);
