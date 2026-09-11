@@ -3,7 +3,7 @@
       (설정방법.md 참고 — 구글 시트 + Apps Script 주소)
       비워두면 "내 브라우저에만 저장"으로 동작합니다.
    ========================================================= */
-const API_URL = "https://script.google.com/macros/s/AKfycbyj6s_MHu8qo7c3OdL6VLGNMnGfpVm92SbsFWx2oiPgJAHSDdraLQFLL6J57vKK6laZhA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbx9uIC-nA4TAB8B3r9u3LZpsJocBZxGXYgS_t5LPm_vpEDo_0A1ioO2PqTSy0CY6_-0Vw/exec";
 const TRIP_KEY = "taean-0912";   // 이 여행의 이름표 (친구들과 같은 값이어야 함)
 
 /* =========================================================
