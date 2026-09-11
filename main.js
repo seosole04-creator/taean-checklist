@@ -74,6 +74,7 @@ const $ = id => document.getElementById(id);
 let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let saveTimer = null;
 let saving = false;
+let pendingSave = false;
 let localTouchedAt = 0;
 let splitSelection = new Set(DEFAULT_DATA.members.map(m => m.id));
 
@@ -116,7 +117,8 @@ function scheduleSave() {
 }
 
 async function pushSave() {
-  if (!API_URL || saving) return;
+  if (!API_URL) return;
+  if (saving) { pendingSave = true; return; } // 저장 중에 또 바뀌면 끝나고 이어서 저장 (안 그러면 그 변경분이 유실됨)
   saving = true;
   try {
     const res = await fetch(API_URL, {
@@ -129,9 +131,13 @@ async function pushSave() {
     status("저장됨 ✓");
   } catch (e) {
     status("저장 실패 — 잠시 후 다시 시도합니다", true);
-    setTimeout(pushSave, 4000);
+    pendingSave = true;
   } finally {
     saving = false;
+    if (pendingSave) {
+      pendingSave = false;
+      setTimeout(pushSave, 800);
+    }
   }
 }
 
@@ -171,6 +177,7 @@ function commit() { scheduleSave(); render(); }
 /* ---------- 화면 그리기 ---------- */
 function renderMembers() {
   const row = $("memberRow");
+  if (row.contains(document.activeElement)) return; // 이름 입력 중엔 다시 그리지 않음 (한글 조합 중 DOM을 바꾸면 글자가 깨짐)
   row.innerHTML = "";
   data.members.forEach((m, i) => {
     const mine = data.items.filter(t => itemWho(t).includes(m.id));
@@ -200,6 +207,7 @@ function renderMembers() {
 
 function renderCards() {
   const wrap = $("cards");
+  if (wrap.contains(document.activeElement) && document.activeElement.tagName === "INPUT") return; // 항목 추가 입력 중엔 다시 그리지 않음 (한글 조합 깨짐 방지)
   wrap.innerHTML = "";
   CATEGORIES.forEach(cat => {
     const items = data.items.filter(i => i.c === cat.id);
@@ -390,7 +398,7 @@ function wireStatic() {
     if (!name || !amt) return;
     ensureSplitSelection();
     const splitAmong = data.members.filter(m => splitSelection.has(m.id)).map(m => m.id);
-    data.expenses.push({ id: data.nextId++, t: name, payer: data.members[0] ? data.members[0].id : 0, amt: amt, splitAmong: splitAmong });
+    data.expenses.push({ id: data.nextId++, t: name, payer: 0, amt: amt, splitAmong: splitAmong });
     $("expName").value = "";
     $("expAmt").value = "";
     data.members.forEach(m => splitSelection.add(m.id));
